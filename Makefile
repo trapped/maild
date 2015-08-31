@@ -1,6 +1,6 @@
 .PHONY: all deps
 all: deps
-	mkdir bin > /dev/null
+	mkdir -p bin
 	crystal build -o bin/maild src/maild.cr
 
 deps:

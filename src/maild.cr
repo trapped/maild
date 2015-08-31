@@ -1,8 +1,7 @@
 require "./maild/*"
+require "./maild/smtp/*"
+require "./maild/pop3/*"
 
-list = Maild::Listener.new(2525)
+info "Starting maild"
+list = Maild::Listener.new(2525, Maild::SMTP.new)
 list.start
-
-loop do
-  gets
-end
