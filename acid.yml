@@ -1,0 +1,4 @@
+setup:
+    - sudo apt-get install crystal -qq
+exec:
+    - make
