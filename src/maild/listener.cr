@@ -1,8 +1,6 @@
 require "socket"
 
 class Maild::Listener
-  @pool = [] of Fiber
-
   def initialize(port)
     @ch = Channel(TCPSocket).new
     @server = TCPServer.new(port)
@@ -16,7 +14,7 @@ class Maild::Listener
   def start
     spawn do
       10.times do
-        @pool << spawn do
+        spawn do
           loop do
             handle @ch.receive
           end
