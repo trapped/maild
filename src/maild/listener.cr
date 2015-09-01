@@ -23,7 +23,7 @@ class Maild::Listener
         end
       end
     end
-    info "Spawned listener 10 workers"
+    info "Spawned 10 listener workers"
     loop do
       sock = @server.accept
       @ch.send sock
