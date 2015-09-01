@@ -1,7 +1,7 @@
 require "socket"
 
 abstract class Maild::Handler
-  @@methods = Hash(String, (TCPSocket, Array(String) -> Void))
+  @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32)))
   private def handle(sock : TCPSocket, cmd : String, line : Array(String))
     if @@methods.not_nil!.has_key? cmd
       handler = @@methods.not_nil!.fetch(cmd)
@@ -10,9 +10,9 @@ abstract class Maild::Handler
       method_missing sock, cmd
     end
   end
-  def self.add_method(cmd : String, proc : Proc)
+  def self.add_method(cmd : String, proc : (TCPSocket, Array(String) -> (Nil | Int32)))
     unless @@methods
-      @@methods = Hash(String, (TCPSocket, Array(String) -> Void)).new
+      @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new
     end
     @@methods.not_nil![cmd] = proc
   end
