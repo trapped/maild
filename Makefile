@@ -1,7 +1,7 @@
 .PHONY: all deps
-all: deps
+all: bin/maild | deps
 	mkdir -p bin
-	~/crystal/bin/crystal build -o bin/maild src/maild.cr
+	LIBRARY_PATH="/opt/crystal/embedded/lib" ~/crystal/bin/crystal build -o bin/maild src/maild.cr
 
 deps:
 	shards install

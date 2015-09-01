@@ -2,6 +2,9 @@ require "socket"
 
 abstract class Maild::Handler
   @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32)))
+  def initialize
+    @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new
+  end
   private def handle(sock : TCPSocket, cmd : String, line : Array(String))
     if @@methods.not_nil!.has_key? cmd
       handler = @@methods.not_nil!.fetch(cmd)
