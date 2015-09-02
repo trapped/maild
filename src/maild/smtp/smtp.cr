@@ -6,7 +6,7 @@ class Maild::SMTP < Maild::Handler
   def handle(sock : TCPSocket)
     info "New client"
     greet sock
-    sock.read_timeout = 3.seconds
+    sock.read_timeout = 30.seconds
     begin
       sock.each_line do |line|
         cmd = parse line
@@ -38,5 +38,6 @@ class Maild::SMTP < Maild::Handler
 
   handle "quit" do |sock|
     sock.puts "221 maild ESMTP server closing connection"
+    sock.close
   end
 end
