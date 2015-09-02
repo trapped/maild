@@ -1,23 +1,24 @@
 require "socket"
 
 abstract class Maild::Handler
-  @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32)))
+  @@handlers = nil
   def initialize
-    @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new
+    @@handlers = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new unless @@handlers
   end
   private def handle(sock : TCPSocket, cmd : String, line : Array(String))
-    if @@methods.not_nil!.has_key? cmd
-      handler = @@methods.not_nil!.fetch(cmd)
+    if @@handlers.not_nil!.has_key? cmd.upcase
+      handler = @@handlers.not_nil!.fetch(cmd.upcase)
       handler.call sock, line
     else
-      method_missing sock, cmd
+      method_missing sock, cmd.upcase
     end
   end
   def self.add_method(cmd : String, proc : (TCPSocket, Array(String) -> (Nil | Int32)))
-    unless @@methods
-      @@methods = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new
+    if @@handlers.nil?
+      info "Reinstantiating @@handlers"
+      @@handlers = Hash(String, (TCPSocket, Array(String) -> (Nil | Int32))).new
     end
-    @@methods.not_nil![cmd] = proc
+    @@handlers.not_nil![cmd.upcase] = proc
   end
   macro handle(cmd)
     def self.cmd_{{cmd.id}}(sock : TCPSocket, args : Array(String))

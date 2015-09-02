@@ -9,6 +9,7 @@ class Maild::SMTP < Maild::Handler
     begin
       sock.each_line do |line|
         cmd = parse line
+        info "#{cmd[0].upcase} from #{sock.peeraddr.ip_address}:#{sock.peeraddr.ip_port}"
         handle sock, cmd.shift.upcase, cmd
       end
     rescue
@@ -19,6 +20,7 @@ class Maild::SMTP < Maild::Handler
 
   def method_missing(sock, cmd)
     sock.puts "504 not implemented"
+    error "#{cmd.upcase.inspect} requested but not implemented (available: #{@@handlers.try &.keys.join ", "})"
   end
 
   private def greet(sock)
