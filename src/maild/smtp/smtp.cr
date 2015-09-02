@@ -6,15 +6,20 @@ class Maild::SMTP < Maild::Handler
   def handle(sock : TCPSocket)
     info "New client"
     greet sock
+    sock.read_timeout = 3.seconds
     begin
       sock.each_line do |line|
         cmd = parse line
         info "#{cmd[0].upcase} from #{sock.peeraddr.ip_address}:#{sock.peeraddr.ip_port}"
         handle sock, cmd.shift.upcase, cmd
       end
-    rescue
-      info "Connection terminated unexpectedly"
+    rescue IO::Timeout
+      info "Connection timed out"
+      sock.puts "421 timed out"
+    rescue ex
+      info "Connection terminated unexpectedly: #{ex.inspect}"
     end
+    sock.close
     info "Closed"
   end
 
@@ -29,5 +34,9 @@ class Maild::SMTP < Maild::Handler
 
   handle "noop" do |sock|
     sock.puts "250 no operation performed"
+  end
+
+  handle "quit" do |sock|
+    sock.puts "221 maild ESMTP server closing connection"
   end
 end
