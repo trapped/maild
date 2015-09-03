@@ -1,7 +1,7 @@
 require "socket"
 
 class Maild::Listener
-  def initialize(port : Int32, protocol_handler = nil : Class?)
+  def initialize(port : Int32, protocol_handler = nil : Maild::Handler.class)
     @ch = Channel(TCPSocket).new
     @proto_handler = protocol_handler
     @server = TCPServer.new(port)
