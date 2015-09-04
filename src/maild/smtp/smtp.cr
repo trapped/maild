@@ -75,13 +75,30 @@ class Maild::SMTP < Maild::Handler
   def cmd_mail(sock, args)
     must_have @identity
     must_not_have @sender
+    args = args.map(&.split ':').flatten
     while arg = args.shift?
       case arg.downcase
-      when "from:"
+      when "from"
         sender = args.shift? || return argument_missing sock, "sender address"
+        sender = sender[/<(.*)>/, 0]? || return sock.puts "501 malformatted address"
         @sender = sender if sender =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid sender address"
       end
     end
     sock.puts "250 sender #{@sender} ok"
+  end
+
+  def cmd_rcpt(sock, args)
+    must_have @identity
+    must_have @sender
+    args = args.map(&.split ':').flatten
+    while arg = args.shift
+      case arg.downcase
+      when "to"
+        recipient = args.shift? || return argument_missing sock, "recipient address"
+        recipient = recipient[/<(.*)>/, 0]? || return sock.puts "501 malformatted address"
+        @recipient << recipient if recipient =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid recipient address"
+      end
+    end
+    sock.puts "250 recipient #{@recipient} ok"
   end
 end
