@@ -24,12 +24,12 @@ class Maild::SMTP < Maild::Handler
     info "Closed"
   end
 
-  def self.method_missing(sock, cmd)
+  def method_missing(sock, cmd)
     sock.puts "504 not implemented"
-    error "#{cmd.upcase.inspect} requested but not implemented (available: #{@@handlers.try &.keys.join ", "})"
+    error "#{cmd.upcase.inspect} requested but not implemented"
   end
 
-  def self.argument_missing(sock, arg)
+  def argument_missing(sock, arg)
     sock.puts "501 argument missing: #{arg}"
   end
 
