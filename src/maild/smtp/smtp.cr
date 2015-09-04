@@ -1,7 +1,7 @@
 class Maild::SMTP < Maild::Handler
   property identity :: String
-  property from :: String
-  property to :: Array(String)
+  property sender :: String
+  property recipients :: Array(String)
 
   def handle(sock : TCPSocket)
     info "New client"
@@ -74,14 +74,14 @@ class Maild::SMTP < Maild::Handler
 
   def cmd_mail(sock, args)
     must_have @identity
-    must_not_have @from
+    must_not_have @sender
     while arg = args.shift?
       case arg.downcase
       when "from:"
-        from = args.shift? || return argument_missing sock, "sender address"
-        @from = from if from =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid sender address"
+        sender = args.shift? || return argument_missing sock, "sender address"
+        @sender = sender if sender =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid sender address"
       end
     end
-    sock.puts "250 sender #{@from} ok"
+    sock.puts "250 sender #{@sender} ok"
   end
 end
