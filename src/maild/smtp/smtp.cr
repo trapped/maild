@@ -1,5 +1,7 @@
 class Maild::SMTP < Maild::Handler
-  property identity
+  property identity :: String
+  property from :: String
+  property to :: Array(String)
 
   def parse(cmd : String)
     return cmd.chomp.split ' '
