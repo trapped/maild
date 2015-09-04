@@ -3,19 +3,16 @@ class Maild::SMTP < Maild::Handler
   property from :: String
   property to :: Array(String)
 
-  def parse(cmd : String)
-    return cmd.chomp.split ' '
-  end
-
   def handle(sock : TCPSocket)
     info "New client"
     greet sock
     sock.read_timeout = 30.seconds
     begin
       sock.each_line do |line|
-        cmd = parse line
-        info "#{cmd[0].upcase} from #{sock.peeraddr.ip_address}:#{sock.peeraddr.ip_port}"
-        handle sock, cmd.shift.upcase, cmd
+        args = line.chomp.split ' '
+        cmd = args.shift.upcase
+        info "#{cmd} from #{sock.peeraddr.ip_address}:#{sock.peeraddr.ip_port}"
+        handle sock, cmd, args
         break if sock.closed?
       end
     rescue IO::Timeout
