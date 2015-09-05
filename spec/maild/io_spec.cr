@@ -1,5 +1,3 @@
-require "../spec_helper"
-
 module IO
   describe "#puts" do
     it "should append CRLF" do
