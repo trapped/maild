@@ -18,19 +18,19 @@ class Maild::SMTP < Maild::Handler
     rescue IO::Timeout
       info "Connection timed out"
       sock.puts "421 timed out"
+      sock.close
     rescue ex
       info "Connection terminated unexpectedly: #{ex.inspect}"
     end
     info "Closed"
   end
 
-  def method_missing(sock, cmd)
-    sock.puts "504 not implemented"
-    error "#{cmd.upcase.inspect} requested but not implemented"
+  macro method_missing(cmd)
+    (sock.puts "504 not implemented"; info "#{{{cmd}}} requested but not implemented")
   end
 
-  def argument_missing(sock, arg)
-    sock.puts "501 argument missing: #{arg}"
+  macro argument_missing(arg)
+    (sock.puts "501 argument missing: #{{{arg}}}"; nil)
   end
 
   private def greet(sock)
@@ -41,11 +41,12 @@ class Maild::SMTP < Maild::Handler
     sock.puts "250 no operation performed"
   end
 
-  def cmd_rset(sock, args)
+  macro def cmd_rset(sock, args) : Nil
     {% for var in @type.instance_vars %}
-    {{var.id}} = nil
+    @{{var.id}} = nil
     {% end %}
     sock.puts "250 session has been reset"
+    nil
   end
 
   def cmd_quit(sock, args)
@@ -76,29 +77,34 @@ class Maild::SMTP < Maild::Handler
     must_have @identity
     must_not_have @sender
     args = args.map(&.split ':').flatten
+    return argument_missing "sender address" if args.length < 2
     while arg = args.shift?
       case arg.downcase
       when "from"
-        sender = args.shift? || return argument_missing sock, "sender address"
-        sender = sender[/<(.*)>/, 0]? || return sock.puts "501 malformatted address"
+        sender = args.shift? || return argument_missing "sender address"
+        sender = sender[/<(.*)>/, 1]? || return sock.puts "501 malformatted address"
         @sender = sender if sender =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid sender address"
+        sock.puts "250 sender #{sender} ok"
       end
     end
-    sock.puts "250 sender #{@sender} ok"
+    argument_missing "sender address" unless @sender
   end
 
   def cmd_rcpt(sock, args)
     must_have @identity
     must_have @sender
     args = args.map(&.split ':').flatten
-    while arg = args.shift
+    recipient = nil
+    while arg = args.shift?
       case arg.downcase
       when "to"
-        recipient = args.shift? || return argument_missing sock, "recipient address"
-        recipient = recipient[/<(.*)>/, 0]? || return sock.puts "501 malformatted address"
-        @recipient << recipient if recipient =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid recipient address"
+        @recipients = Array(String).new unless @recipients
+        recipient = args.shift? || return argument_missing "recipient address"
+        recipient = recipient[/<(.*)>/, 1]? || return sock.puts "501 malformatted address"
+        @recipients.not_nil! << recipient if recipient =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid recipient address"
+        sock.puts "250 recipient #{recipient} ok"
       end
     end
-    sock.puts "250 recipient #{@recipient} ok"
+    argument_missing "recipient address" unless recipient
   end
 end

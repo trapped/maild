@@ -13,20 +13,20 @@ abstract class Maild::Handler
         cmd_\{\{method.id}}(sock, args)
       \{% end %}
       else
-        method_missing sock, \{\{cmd.id}}.upcase
+        method_missing \{\{cmd.id}}.upcase
       end
     end
   end
 
   macro required(name, source)
-    {{name.id}} = {{source.id}} || return argument_missing sock, {{name}}
+    {{name.id}} = {{source.id}} || return argument_missing {{name}}
   end
 
   macro must_not_have(var)
-    return sock.puts "503 wrong session state" if {{var}}
+    return sock.puts "503 wrong session state" unless {{var}}.nil?
   end
 
   macro must_have(var)
-    return sock.puts "503 wrong session state" unless {{var}}
+    return sock.puts "503 wrong session state" if {{var}}.nil?
   end
 end
