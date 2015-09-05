@@ -2,6 +2,8 @@ class Maild::SMTP < Maild::Handler
   property identity :: String
   property sender :: String
   property recipients :: Array(String)
+  property message :: String
+  property messages :: Array(String)
 
   def handle(sock : TCPSocket)
     info "New client"
@@ -106,5 +108,28 @@ class Maild::SMTP < Maild::Handler
       end
     end
     argument_missing "recipient address" unless recipient
+  end
+
+  def cmd_data(sock, args)
+    must_have @identity
+    must_have @sender
+    must_have @recipients
+    must_not_have @message
+    sock.puts "354 ok"
+    @message = ""
+    sock.each_line do |line|
+      case line.chomp
+      when "."
+        @messages = Array(String).new unless @messages
+        @messages.not_nil! << @message.not_nil!
+        @message = nil
+        @sender = nil
+        @recipients = nil
+        puts @messages.inspect
+        return sock.puts "250 saved to disk"
+      else
+        @message = "#{message}#{line}"
+      end
+    end
   end
 end
