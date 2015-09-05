@@ -1,5 +1,7 @@
 .PHONY: all deps
-all: deps
+all: deps maild test
+
+maild:
 	mkdir -p bin
 	LIBRARY_PATH="/opt/crystal/embedded/lib" ~/crystal/bin/crystal build -o bin/maild src/maild.cr
 
