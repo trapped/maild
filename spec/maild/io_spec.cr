@@ -1,5 +1,4 @@
 require "../spec_helper"
-require "../../src/maild/io"
 
 module IO
   describe "#puts" do
