@@ -1,14 +1,15 @@
 class Maild::SMTP < Maild::Handler
+  property timeout :: TimeSpan
   property identity :: String
   property sender :: String
   property recipients :: Array(String)
   property message :: String
   property messages :: Array(String)
 
-  def handle(sock : TCPSocket)
+  def handle(sock : Socket)
     info "New client"
     greet sock
-    sock.read_timeout = 30.seconds
+    sock.read_timeout = 30.seconds unless @timeout
     begin
       sock.each_line do |line|
         args = line.chomp.split ' '

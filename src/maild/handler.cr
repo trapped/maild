@@ -1,9 +1,9 @@
 require "socket"
 
 abstract class Maild::Handler
-  abstract def method_missing(sock : TCPSocket, name : String)
-  abstract def argument_missing(sock : TCPSocket, name : String)
-  abstract def handle(sock : TCPSocket)
+  abstract def method_missing(sock : Socket, name : String)
+  abstract def argument_missing(sock : Socket, name : String)
+  abstract def handle(sock : Socket)
 
   macro inherited
     macro handle(sock, cmd, args)
