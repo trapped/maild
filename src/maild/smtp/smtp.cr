@@ -12,6 +12,7 @@ class Maild::SMTP < Maild::Handler
     sock.read_timeout = @timeout || 30.seconds
     begin
       sock.each_line do |line|
+        next if line.chomp.empty?
         args = line.chomp.split ' '
         cmd = args.shift.upcase
         info "#{cmd} from #{sock.peeraddr.ip_address}:#{sock.peeraddr.ip_port}"
