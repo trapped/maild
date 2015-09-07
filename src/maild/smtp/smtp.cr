@@ -9,7 +9,7 @@ class Maild::SMTP < Maild::Handler
   def handle(sock : Socket)
     info "New client"
     greet sock
-    sock.read_timeout = 30.seconds unless @timeout
+    sock.read_timeout = @timeout || 30.seconds
     begin
       sock.each_line do |line|
         args = line.chomp.split ' '
