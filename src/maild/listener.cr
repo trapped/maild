@@ -3,16 +3,16 @@ require "concurrent/channel"
 
 class Maild::Listener
   def initialize(port : (Int32 | Nil), protocol_handler = nil : (Maild::Handler.class | Nil))
-    @ch = Channel(TCPSocket).new if port
+    @ch = Channel(TCPSocket).new
     @proto_handler = protocol_handler || nil
     @server = TCPServer.new(port) if port
   end
 
   private def handle(sock : TCPSocket)
-    unless @proto_handler
+    if @proto_handler.nil?
       sock.close unless sock.closed?
     else
-      @proto_handler.new.handle sock
+      @proto_handler.not_nil!.new.handle sock
     end
   end
 
@@ -20,14 +20,14 @@ class Maild::Listener
     10.times do
       spawn do
         loop do
-          handle @ch.receive if @ch
+          handle @ch.receive
         end
       end
     end
     info "Spawned 10 listener workers"
     loop do
-      sock = @server.accept if @server
-      @ch.send sock if @ch
+      sock = @server.not_nil!.accept if @server
+      @ch.send sock.not_nil!
     end
   end
 end
