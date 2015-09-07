@@ -1,3 +1,5 @@
+require "../../src/maild/io"
+
 module IO
   describe "#puts" do
     it "appends CRLF" do

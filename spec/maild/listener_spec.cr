@@ -1,3 +1,7 @@
+require "../../src/maild/listener"
+require "../../src/maild/handler"
+require "../../src/maild/smtp"
+
 class Maild::Listener
   describe "#initialize" do
     it "accepts 1 or 2 arguments" do
