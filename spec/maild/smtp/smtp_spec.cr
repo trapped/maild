@@ -300,7 +300,7 @@ class Maild::SMTP < Maild::Handler
   end
 
   describe "#cmd_rcpt" do
-    it "requires being identified and a sender" do
+    it "requires being identified and having a sender" do
       smtp = Maild::SMTP.new
       ss = UNIXSocket.pair
       smtp.timeout = 2.seconds
@@ -390,6 +390,37 @@ class Maild::SMTP < Maild::Handler
       end
       smtp.handle(ss[1])
       smtp.recipients.not_nil!.includes?("other.user@example.com").should be_true
+    end
+  end
+
+  describe "#cmd_data" do
+    it "requires being identified, having a sender, and a recipient" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "DATA"
+        ss[0].gets.not_nil!.chomp.should eq "503 wrong session state"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "DATA"
+        ss[0].gets.not_nil!.chomp.should eq "503 wrong session state"
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets
+        ss[0].puts "DATA"
+        ss[0].gets.not_nil!.chomp.should eq "503 wrong session state"
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets
+        ss[0].puts "DATA"
+        ss[0].gets.not_nil!.chomp.should eq "354 ok"
+        ss[0].puts "Hi!"
+        ss[0].puts "Some other text"
+        ss[0].puts "."
+        ss[0].gets.not_nil!.chomp.should eq "250 saved to disk"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
     end
   end
 end

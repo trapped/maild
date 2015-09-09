@@ -128,7 +128,6 @@ class Maild::SMTP < Maild::Handler
         @message = nil
         @sender = nil
         @recipients = nil
-        puts @messages.inspect
         return sock.puts "250 saved to disk"
       else
         @message = "#{message}#{line}"
