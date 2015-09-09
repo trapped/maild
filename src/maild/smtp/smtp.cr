@@ -106,6 +106,7 @@ class Maild::SMTP < Maild::Handler
         recipient = args.shift? || return argument_missing "recipient address"
         recipient = recipient[/<(.*)>/, 1]? || return sock.puts "501 malformatted address"
         @recipients.not_nil! << recipient if recipient =~ /\A([\w+\-].?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i || return sock.puts "553 invalid recipient address"
+        @recipients.not_nil!.uniq!
         sock.puts "250 recipient #{recipient} ok"
       end
     end

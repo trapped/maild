@@ -298,4 +298,98 @@ class Maild::SMTP < Maild::Handler
       smtp.sender.should eq "user@example.com"
     end
   end
+
+  describe "#cmd_rcpt" do
+    it "requires being identified and a sender" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "503 wrong session state"
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 recipient other.user@example.com ok"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
+    end
+    it "allows being called twice" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 sender user@example.com ok"
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 recipient other.user@example.com ok"
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 recipient other.user@example.com ok"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
+    end
+    it "requires the recipient address as argument" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 sender user@example.com ok"
+        ss[0].puts "RCPT"
+        ss[0].gets.not_nil!.chomp.should eq "501 argument missing: recipient address"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
+    end
+    it "only accepts valid email addresses" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets
+        ss[0].puts "RCPT TO:user@example.com"
+        ss[0].gets.not_nil!.chomp.should eq "501 malformatted address"
+        ss[0].puts "RCPT TO:<>"
+        ss[0].gets.not_nil!.chomp.should eq "553 invalid recipient address"
+        ss[0].puts "RCPT TO:"
+        ss[0].gets.not_nil!.chomp.should eq "501 argument missing: recipient address"
+        ss[0].puts "RCPT TO:<user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 recipient user@example.com ok"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
+    end
+    it "sets recipients" do
+      smtp = Maild::SMTP.new
+      ss = UNIXSocket.pair
+      smtp.timeout = 2.seconds
+      spawn do
+        ss[0].gets.not_nil!.chomp.should eq "220 maild ESMTP server ready"
+        ss[0].puts "HELO example.com"
+        ss[0].gets
+        ss[0].puts "MAIL FROM:<user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 sender user@example.com ok"
+        ss[0].puts "RCPT TO:<other.user@example.com>"
+        ss[0].gets.not_nil!.chomp.should eq "250 recipient other.user@example.com ok"
+        ss[0].puts "QUIT"
+      end
+      smtp.handle(ss[1])
+      smtp.recipients.not_nil!.includes?("other.user@example.com").should be_true
+    end
+  end
 end
