@@ -1,5 +1,7 @@
+require "time/span"
+
 class Maild::SMTP < Maild::Handler
-  property timeout :: TimeSpan
+  property timeout :: Time::Span
   property identity :: String
   property sender :: String
   property recipients :: Array(String)
@@ -67,7 +69,7 @@ class Maild::SMTP < Maild::Handler
       "PIPELINING" # receive buffer is not flushed on failure
     ]
     capabilities.each_with_index do |capability, i|
-      sock.puts "250#{i == capabilities.length-1 ? ' ' : '-'}#{capability}"
+      sock.puts "250#{i == capabilities.size-1 ? ' ' : '-'}#{capability}"
     end
   end
 
@@ -81,7 +83,7 @@ class Maild::SMTP < Maild::Handler
     must_have @identity
     must_not_have @sender
     args = args.map(&.split ':').flatten
-    return argument_missing "sender address" if args.length < 2
+    return argument_missing "sender address" if args.size < 2
     while arg = args.shift?
       case arg.downcase
       when "from"
