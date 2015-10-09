@@ -1,2 +1,8 @@
 name: maild
 version: 0.0.1
+
+dependencies:
+  active_record:
+    github: waterlink/active_record.cr
+  fs_adapter:
+    github: trapped/fs_adapter
