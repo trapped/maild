@@ -6,3 +6,4 @@
 
 shard.lock
 .shards/
+users_db/
